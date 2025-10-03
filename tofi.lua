@@ -1,17 +1,18 @@
---[[
-Lua api for Tofi
-uses drun if no choices are given
+-- Tofi api for Lua
 
+--[[
 returns a table containing four functions:
-	options({ option = value })
-	choices({ choice1, choice2})
-	info()
-	open()
+	- options({ option = value })
+	- choices({ choice1, choice2})
+	- info()
+	- open()
+uses drun if no choices are given
 
 Usage example:
 local my_opener = require("tofi").options({ option = value})
 my_opener.choices({"a", "b", "c"}).open()
 ]]
+
 -- build a tofi command using the given choices and options
 local build_tofi_cmd = function(choices, options)
 	local cmd = ""

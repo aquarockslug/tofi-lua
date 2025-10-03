@@ -13,7 +13,6 @@ local menu = tofi
     })
     .choices({ "a", "b", "c" })
 
-
 local result = menu.open()
 
 print(result)

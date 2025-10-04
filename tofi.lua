@@ -1,4 +1,4 @@
--- Tofi api for Lua
+-- Control Tofi with Lua
 
 --[[
 returns a table containing four functions:
@@ -20,7 +20,7 @@ local build_tofi_cmd = function(choices, options)
 	-- build the choices string
 	if choices then
 		cmd = "echo '"
-		for i, choice in ipairs(choices) do
+		for _, choice in ipairs(choices) do
 			cmd = cmd .. choice .. "\n"
 		end
 		cmd = cmd .. "' | tofi "
@@ -47,13 +47,13 @@ local execute_tofi = function(command)
 	local handle = io.popen(command)
 	if handle then
 		retval = handle:read("*a"):gsub("\n", "")
+		handle:close()
 	end
-	handle:close()
 	return retval
 end
 
 -- for controlling tofi options and choices
-opener = function(choi, opts)
+Opener = function(choi, opts)
 	return {
 		-- build and execute a tofi command using this opener's parameters
 		open = function()
@@ -66,13 +66,13 @@ opener = function(choi, opts)
 		end,
 		-- return a new opener with the new choices
 		choices = function(new_choi)
-			return opener(new_choi, opts)
+			return Opener(new_choi, opts)
 		end,
 		-- return a new opener with the new options
 		options = function(new_opts)
-			return opener(choi, new_opts)
+			return Opener(choi, new_opts)
 		end,
 	}
 end
 
-return opener(nil, nil)
+return Opener(nil, nil)

@@ -22,12 +22,14 @@ local build_tofi_cmd = function(choices, options)
 
 	-- build the choices string
 	if choices then
+		-- echo the choices through a pipe to tofi
 		cmd = "echo '"
 		for _, choice in ipairs(choices) do
 			cmd = cmd .. choice .. "\n"
 		end
 		cmd = cmd .. "' | tofi "
 	else
+		-- use drun if no choices given
 		cmd = "tofi-drun "
 	end
 
@@ -48,7 +50,7 @@ end
 ------@param command string
 ------@return string
 local execute = function(command)
-	local retval = ""
+	local retval = nil
 	local handle = io.popen(command)
 	if handle then
 		retval = handle:read("*a"):gsub("\n", "")

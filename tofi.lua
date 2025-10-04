@@ -13,7 +13,10 @@ local my_opener = require("tofi").options({ option = value})
 my_opener.choices({"a", "b", "c"}).open()
 ]]
 
--- build a tofi command using the given choices and options
+---build a tofi command using the given choices and options
+------@param choices string[]
+------@param options table<string, string | number>
+------@return string
 local build_tofi_cmd = function(choices, options)
 	local cmd = ""
 
@@ -41,8 +44,10 @@ local build_tofi_cmd = function(choices, options)
 	return cmd
 end
 
--- execute the command and return its result
-local execute_tofi = function(command)
+---execute the command and return its result
+------@param command string
+------@return string
+local execute = function(command)
 	local retval = ""
 	local handle = io.popen(command)
 	if handle then
@@ -52,23 +57,27 @@ local execute_tofi = function(command)
 	return retval
 end
 
--- for controlling tofi options and choices
+---stores tofi options and choices
+------@param choices string[]
+------@param options table<string, string | number>
+------@return table
 Opener = function(choi, opts)
 	return {
 		-- build and execute a tofi command using this opener's parameters
 		open = function()
-			local cmd = build_tofi_cmd(choi, opts)
-			return execute_tofi(cmd)
+			return execute(build_tofi_cmd(choi, opts))
 		end,
 		-- get info about the opener
 		info = function()
 			return { choices = choi, options = opts }
 		end,
 		-- return a new opener with the new choices
+		---@type fun(choices: string[]): table
 		choices = function(new_choi)
 			return Opener(new_choi, opts)
 		end,
 		-- return a new opener with the new options
+		---@type fun(options: table<string, string | number>): table
 		options = function(new_opts)
 			return Opener(choi, new_opts)
 		end,

@@ -3,66 +3,76 @@
 --[[
 returns a table containing four functions:
 	- options({ option = value })
-	- choices({ choice1, choice2})
+	- choices({ choice1, choice2 })
 	- info()
 	- open()
 uses drun if no choices are given
-
-Usage example:
-local my_opener = require("tofi").options({ option = value})
-my_opener.choices({"a", "b", "c"}).open()
 ]]
 
+---Escape single quotes for shell usage
+---@param str string
+---@return string
+local escape_shell_arg = function(str)
+	return str:gsub("'", "'\\''")
+end
+
 ---build a tofi command using the given choices and options
-------@param choices string[]
-------@param options table<string, string | number>
-------@return string
+---@param choices string[]
+---@param options table<string, string | number>
+---@return string
 local build_tofi_cmd = function(choices, options)
-	local cmd = ""
+	local parts = {}
+	local base_cmd
 
 	-- build the choices string
 	if choices then
 		-- echo the choices through a pipe to tofi
-		cmd = "echo '"
-		for _, choice in ipairs(choices) do
-			cmd = cmd .. choice .. "\n"
+		local escaped_choices = {}
+		for i, choice in ipairs(choices) do
+			escaped_choices[i] = escape_shell_arg(choice)
 		end
-		cmd = cmd .. "' | tofi "
+		-- Use table.concat for efficient string building
+		base_cmd = "echo '" .. table.concat(escaped_choices, "\n") .. "' | tofi"
 	else
 		-- use drun if no choices given
-		cmd = "tofi-drun "
+		base_cmd = "tofi-drun"
 	end
+	table.insert(parts, base_cmd)
 
 	-- add options to the command if there are any
 	if options then
 		for option, value in pairs(options) do
-			-- convert options from { option = "value" } into "--option=value"
-			local arg = "--" .. option .. "=" .. value
-			-- add the argument to the command
-			cmd = cmd .. " " .. arg
+			-- convert options from { option = "value" } into "--option='value'"
+			-- Escape the value to prevent shell injection
+			local arg = "--" .. option .. "='" .. escape_shell_arg(tostring(value)) .. "'"
+			table.insert(parts, arg)
 		end
 	end
 
-	return cmd
+	return table.concat(parts, " ")
 end
 
 ---execute the command and return its result
-------@param command string
-------@return string
+---@param command string
+---@return string
 local execute = function(command)
 	local retval = nil
 	local handle = io.popen(command)
 	if handle then
-		retval = handle:read("*a"):gsub("\n", "")
+		retval = handle:read("*a")
+		if retval then
+			retval = retval:gsub("\n", "")
+		end
 		handle:close()
 	end
 	return retval
 end
 
 ---stores tofi options and choices
-------@param choices string[]
-------@param options table<string, string | number>
-------@return table
+---@param choices string[]
+---@param options table<string, string | number>
+---@return table
+local Opener
 Opener = function(choi, opts)
 	return {
 		-- build and execute a tofi command using this opener's parameters

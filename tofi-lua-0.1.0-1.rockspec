@@ -7,7 +7,7 @@ source = {
 description = {
 	summary = "Control Tofi with Lua",
 	detailed = [[
-		A Lua wrapper for the tofi launcher/menu for Wayland.
+		A Lua wrapper for the tofi menu for Wayland.
 		Allows building menus, setting options, and getting results comfortably from Lua.
 	]],
 	homepage = "https://github.com/aquarockslug/tofi-lua",

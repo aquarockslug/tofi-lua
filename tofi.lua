@@ -1,14 +1,5 @@
 -- Control Tofi with Lua
 
---[[
-returns a table containing four functions:
-	- options({ option = value })
-	- choices({ choice1, choice2 })
-	- info()
-	- open()
-uses drun if no choices are given
-]]
-
 ---escape single quotes for shell usage
 ---@param str string
 ---@return string

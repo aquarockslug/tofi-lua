@@ -9,7 +9,7 @@ returns a table containing four functions:
 uses drun if no choices are given
 ]]
 
----Escape single quotes for shell usage
+---escape single quotes for shell usage
 ---@param str string
 ---@return string
 local escape_shell_arg = function(str)
@@ -31,7 +31,6 @@ local build_tofi_cmd = function(choices, options)
 		for i, choice in ipairs(choices) do
 			escaped_choices[i] = escape_shell_arg(choice)
 		end
-		-- Use table.concat for efficient string building
 		base_cmd = "echo '" .. table.concat(escaped_choices, "\n") .. "' | tofi"
 	else
 		-- use drun if no choices given
@@ -43,7 +42,6 @@ local build_tofi_cmd = function(choices, options)
 	if options then
 		for option, value in pairs(options) do
 			-- convert options from { option = "value" } into "--option='value'"
-			-- Escape the value to prevent shell injection
 			local arg = "--" .. option .. "='" .. escape_shell_arg(tostring(value)) .. "'"
 			table.insert(parts, arg)
 		end

@@ -24,7 +24,7 @@ local menu = tofi
         ["prompt-text"] = "Choose:",
         anchor = "center"
     })
-    .choices({ "Option A", "Option B", "Option C" })
+    .choices({ "Choice A", "Choice B", "Choice C" })
 
 -- Open the menu and get the result
 local result = menu.open()

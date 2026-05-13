@@ -1,88 +1,69 @@
--- Control Tofi with Lua
+-- Open a Tofi menu with Lua
+-- require("tofi").options({...}).choices({...}).open()
 
----escape single quotes for shell usage
----@param str string
----@return string
-local escape_shell_arg = function(str)
-	return str:gsub("'", "'\\''")
+local function choice_name(choice)
+	return type(choice) == "table" and choice.name or choice
 end
 
----build a tofi command using the given choices and options
----@param choices string[]
----@param options table<string, string | number>
----@return string
-local build_tofi_cmd = function(choices, options)
-	local parts = {}
-	local base_cmd
+local function choice_value(choices, name)
+	for _, c in ipairs(choices) do
+		if choice_name(c) == name then
+			if type(c) == "table" then
+				return c.value ~= nil and c.value or c.name
+			end
+			return c
+		end
+	end
+	return name
+end
 
-	-- build the choices string
+local function execute_tofi(choices, options)
+	local cmd = ""
 	if choices then
-		-- echo the choices through a pipe to tofi
-		local escaped_choices = {}
-		for i, choice in ipairs(choices) do
-			escaped_choices[i] = escape_shell_arg(choice)
+		cmd = "echo '"
+		for _, choice in ipairs(choices) do
+			cmd = cmd .. choice_name(choice) .. "\n"
 		end
-		base_cmd = "echo '" .. table.concat(escaped_choices, "\n") .. "' | tofi"
+		cmd = cmd .. "' | tofi "
 	else
-		-- use drun if no choices given
-		base_cmd = "tofi-drun"
+		cmd = "tofi-drun "
 	end
-	table.insert(parts, base_cmd)
-
-	-- add options to the command if there are any
-	if options then
-		for option, value in pairs(options) do
-			-- convert options from { option = "value" } into "--option='value'"
-			local arg = "--" .. option .. "='" .. escape_shell_arg(tostring(value)) .. "'"
-			table.insert(parts, arg)
-		end
+	for k, v in pairs(options or {}) do
+		cmd = cmd .. " --" .. k .. "=" .. v
 	end
 
-	return table.concat(parts, " ")
-end
-
----execute the command and return its result
----@param command string
----@return string
-local execute = function(command)
-	local retval = nil
-	local handle = io.popen(command)
+	local handle = io.popen(cmd)
+	local retval = ""
 	if handle then
 		retval = handle:read("*a")
-		if retval then
-			retval = retval:gsub("\n", "")
-		end
 		handle:close()
 	end
-	return retval
+	return retval:gsub("%s+$", "")
 end
 
----stores tofi options and choices
----@param choices string[]
----@param options table<string, string | number>
----@return table
-local Opener
-Opener = function(choi, opts)
+local function create_opener(choices, opts)
 	return {
-		-- build and execute a tofi command using this opener's parameters
 		open = function()
-			return execute(build_tofi_cmd(choi, opts))
+			local selection = execute_tofi(choices, opts)
+			if selection == "" then
+				return nil
+			end
+			if choices then
+				return choice_value(choices, selection)
+			end
+			return selection
 		end,
-		-- get info about the opener
 		info = function()
-			return { choices = choi, options = opts }
+			return { choices = choices, options = opts }
 		end,
-		-- return a new opener with the new choices
-		---@type fun(choices: string[]): table
-		choices = function(new_choi)
-			return Opener(new_choi, opts)
+		choices = function(new_choices)
+			return create_opener(new_choices, opts)
 		end,
-		-- return a new opener with the new options
-		---@type fun(options: table<string, string | number>): table
 		options = function(new_opts)
-			return Opener(choi, new_opts)
+			return create_opener(choices, new_opts)
 		end,
 	}
 end
 
-return Opener(nil, nil)
+return create_opener(nil, nil)
+

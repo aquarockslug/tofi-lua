@@ -1,51 +1,30 @@
 # tofi-lua
 
-A Lua wrapper for [tofi](https://github.com/philj56/tofi), a dmenu/rofi replacement for Wayland.
-
-## Installation
-
-### LuaRocks
-
-```bash
-luarocks install tofi-lua
-```
-
-## Usage
+Lua bindings for [tofi](https://github.com/philj56/tofi).
 
 ```lua
 local tofi = require("tofi")
 
--- Basic usage with options and choices
-local menu = tofi
-    .options({
-        width = "33%",
-        height = "33%",
-        ["outline-width"] = 4,
-        ["prompt-text"] = "Choose:",
-        anchor = "center"
+local selection = tofi
+    .options({ width = "33%", height = "33%", anchor = "bottom" })
+    .choices({
+        { name = "Apples",  value = "apple" },
+        { name = "Bananas", value = "banana" },
+        "Red",
+        "Yellow",
     })
-    .choices({ "Choice A", "Choice B", "Choice C" })
+    .open()
 
--- Open the menu and get the result
-local result = menu.open()
-
-if result then
-    print("You selected: " .. result)
-end
+print(selection) -- "apple", "banana", "Red", "Yellow", or nil if cancelled
 ```
 
 ## API
 
-### `tofi.options(opts)`
-Returns a new opener with the specified options.
-- `opts`: Table of tofi command line options (e.g., `{ width = "50%", anchor = "top" }`).
+`require("tofi")` returns an **opener** with these methods:
 
-### `tofi.choices(items)`
-Returns a new opener with the specified choices.
-- `items`: Array of strings to display.
+- `.options({...})` — set tofi flags (e.g. `["outline-width"] = 4`, `["prompt-text"] = "Choose:"`). Returns a new opener.
+- `.choices({...})` — set menu entries. Entries can be strings or `{name, value}` tables. Returns a new opener.
+- `.open()` — launch tofi, return the selected value, or `nil` if cancelled.
+- `.info()` — return `{choices = ..., options = ...}` for debugging.
 
-### `tofi.open()`
-Opens the tofi window. Returns the selected string, or nil/empty string if cancelled.
-
-### `tofi.info()`
-Returns a table containing current choices and options.
+If no choices are given, `tofi-drun` is used instead.
